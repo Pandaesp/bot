@@ -1,5 +1,5 @@
-include .env
-export
+# include .env
+# export
 
 .PHONY: run
 run: 
