@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/Pandaesp/bot/internal/service/product"
@@ -12,6 +14,9 @@ import (
 type Commander struct {
 	bot            *tgbotapi.BotAPI
 	productService *product.Service
+}
+type CommandData struct {
+	Offset int `json:"offset"`
 }
 
 func NewCommander(bot *tgbotapi.BotAPI, productService *product.Service) *Commander {
@@ -28,6 +33,25 @@ func (c *Commander) HandleUpdate(update tgbotapi.Update) {
 		}
 	}()
 
+	if update.CallbackQuery != nil {
+		// // args := strings.Split(update.CallbackQuery.Data, "_")
+		// msg := tgbotapi.NewMessage(
+		// 	update.CallbackQuery.Message.Chat.ID,
+		// 	fmt.Sprintf("Command: %s\n", args[0]+
+		// 		fmt.Sprintf("Offset: %s\n", args[1])),
+		// )
+
+		parsrdData := CommandData{}
+		json.Unmarshal([]byte(update.CallbackQuery.Data), &parsrdData)
+		msg := tgbotapi.NewMessage(
+			update.CallbackQuery.Message.Chat.ID,
+			fmt.Sprintf("Parsed: %+v\n", parsrdData),
+		)
+
+		c.bot.Send(msg)
+		return
+	}
+
 	if update.Message != nil { // If we got a message
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
@@ -37,6 +61,7 @@ func (c *Commander) HandleUpdate(update tgbotapi.Update) {
 		// } else {
 		// 	c.Default(update.Message)
 		// }
+
 		switch update.Message.Command() {
 		case "help":
 			c.Help(update.Message)
